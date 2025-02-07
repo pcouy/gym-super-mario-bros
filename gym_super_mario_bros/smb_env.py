@@ -31,7 +31,7 @@ class SuperMarioBrosEnv(NESEnv):
     # the legal range of rewards for each step
     reward_range = (-15, 15)
 
-    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None):
+    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None, **kwargs):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -49,7 +49,7 @@ class SuperMarioBrosEnv(NESEnv):
         # decode the ROM path based on mode and lost levels flag
         rom = rom_path(lost_levels, rom_mode)
         # initialize the super object with the ROM path
-        super(SuperMarioBrosEnv, self).__init__(rom)
+        super(SuperMarioBrosEnv, self).__init__(rom, **kwargs)
         # set the target world, stage, and area variables
         target = decode_target(target, lost_levels)
         self._target_world, self._target_stage, self._target_area = target
@@ -139,7 +139,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _x_position(self):
         """Return the current horizontal position."""
         # add the current page 0x6d to the current x
-        return self.ram[0x6d] * 0x100 + self.ram[0x86]
+        return self.ram[0x6d].astype(int) * 0x100 + self.ram[0x86]
 
     @property
     def _left_x_position(self):
@@ -174,7 +174,7 @@ class SuperMarioBrosEnv(NESEnv):
         # check if Mario is above the viewport (the score board area)
         if self._y_viewport < 1:
             # y position overflows so we start from 255 and add the offset
-            return 255 + (255 - self._y_pixel)
+            return 255 + (255 - self._y_pixel.astype(int))
         # invert the y pixel into the distance from the bottom of the screen
         return 255 - self._y_pixel
 
@@ -366,7 +366,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._time_last = self._time
         self._x_position_last = self._x_position
 
-    def _did_step(self, done):
+    def _did_step(self, terminated, truncated):
         """
         Handle any RAM hacking after a step occurs.
 
@@ -378,7 +378,7 @@ class SuperMarioBrosEnv(NESEnv):
 
         """
         # if done flag is set a reset is incoming anyway, ignore any hacking
-        if done:
+        if terminated or truncated:
             return
         # if mario is dying, then cut to the chase and kill hi,
         if self._is_dying:
