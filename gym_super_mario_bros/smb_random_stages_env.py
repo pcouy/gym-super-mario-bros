@@ -166,7 +166,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             a numpy array if mode is 'rgb_array', None otherwise
 
         """
-        return SuperMarioBrosEnv.render(self, mode=mode)
+        return SuperMarioBrosEnv.render(self, mode=mode).copy()
 
     def get_keys_to_action(self):
         """Return the dictionary of keyboard keys to actions."""
