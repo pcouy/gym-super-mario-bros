@@ -366,7 +366,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._time_last = self._time
         self._x_position_last = self._x_position
 
-    def _did_step(self, done):
+    def _did_step(self, terminated, truncated):
         """
         Handle any RAM hacking after a step occurs.
 
@@ -378,7 +378,7 @@ class SuperMarioBrosEnv(NESEnv):
 
         """
         # if done flag is set a reset is incoming anyway, ignore any hacking
-        if done:
+        if terminated or truncated:
             return
         # if mario is dying, then cut to the chase and kill hi,
         if self._is_dying:
