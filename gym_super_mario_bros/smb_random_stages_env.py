@@ -8,7 +8,10 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
     """A Super Mario Bros. environment that randomly selects levels."""
 
     # relevant meta-data about the environment
-    metadata = SuperMarioBrosEnv.metadata
+    metadata = {
+        "render_modes": ["human", "rgb_array"],
+        "render_fps": SuperMarioBrosEnv.metadata.get("render_fps", 60)
+    }
 
     # the legal range of rewards for each step
     reward_range = SuperMarioBrosEnv.reward_range
@@ -19,18 +22,22 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
     # action space is a bitmap of button press values for the 8 NES buttons
     action_space = SuperMarioBrosEnv.action_space
 
-    def __init__(self, rom_mode='vanilla', stages=None):
+    def __init__(self, rom_mode='vanilla', stages=None, render_mode=None):
         """
         Initialize a new Super Mario Bros environment.
 
         Args:
             rom_mode (str): the ROM mode to use when loading ROMs from disk
             stages (list): select stages at random from a specific subset
+            render_mode (str): the render mode to use for the environment
 
         Returns:
             None
 
         """
+        assert render_mode is None or render_mode in self.metadata["render_modes"]
+        self.render_mode = render_mode
+        
         # create a dedicated random number generator for the environment
         self.np_random = np.random.RandomState()
         # setup the environments
@@ -44,7 +51,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
                 # create the target as a tuple of the world and stage
                 target = (world, stage)
                 # create the environment with the given ROM mode
-                env = SuperMarioBrosEnv(rom_mode=rom_mode, target=target)
+                env = SuperMarioBrosEnv(rom_mode=rom_mode, target=target, render_mode=render_mode)
                 # add the environment to the stage list for this world
                 self.envs[-1].append(env)
         # create a placeholder for the current environment
@@ -88,7 +95,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             options (dict): An optional options for resetting the environment.
                 Can include the key 'stages' to override the random set of
                 stages to sample from.
-            return_info (any): unused
+            return_info (any): unused, kept for compatibility
 
         Returns:
             state (np.ndarray): next frame as a result of the given action
@@ -112,11 +119,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         # Set the environment based on the world and stage.
         self.env = self.envs[world][stage]
         # reset the environment
-        return self.env.reset(
-            seed=seed,
-            options=options,
-            return_info=return_info
-        )
+        return self.env.reset(seed=seed)
 
     def step(self, action):
         """
@@ -152,21 +155,18 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         if self.viewer is not None:
             self.viewer.close()
 
-    def render(self, mode='human'):
+    def render(self):
         """
         Render the environment.
 
-        Args:
-            mode (str): the mode to render with:
-            - human: render to the current display
-            - rgb_array: Return an numpy.ndarray with shape (x, y, 3),
-              representing RGB values for an x-by-y pixel image
-
         Returns:
-            a numpy array if mode is 'rgb_array', None otherwise
-
+            a numpy array if render_mode is 'rgb_array', None if 'human'
         """
-        return SuperMarioBrosEnv.render(self, mode=mode).copy()
+        if self.render_mode == "rgb_array":
+            return self.env.render()
+        elif self.render_mode == "human":
+            self.env.render()
+            return None
 
     def get_keys_to_action(self):
         """Return the dictionary of keyboard keys to actions."""
