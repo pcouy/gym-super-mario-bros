@@ -61,6 +61,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._time_last = 0
         # setup a variable to keep track of the last frames x position
         self._x_position_last = 0
+        self._x_position_best = 0
         # reset the emulator
         self.reset()
         # skip the start screen
@@ -328,8 +329,10 @@ class SuperMarioBrosEnv(NESEnv):
     @property
     def _x_reward(self):
         """Return the reward based on left right movement between steps."""
-        _reward = self._x_position - self._x_position_last
+        _reward = max(0, self._x_position - self._x_position_best)
         self._x_position_last = self._x_position
+        self._x_position_best = max(self._x_position_best, self._x_position)
+        #print(f"position: {self._x_position}, best: {self._x_position_best}, reward: {_reward}")
         # TODO: check whether this is still necessary
         # resolve an issue where after death the x position resets. The x delta
         # is typically has at most magnitude of 3, 5 is a safe bound
@@ -347,6 +350,7 @@ class SuperMarioBrosEnv(NESEnv):
         # should default to 0 reward
         if _reward > 0:
             return 0
+        print(f"time: {self._time}, last: {self._time_last}, reward: {_reward}")
 
         return _reward
 
@@ -357,18 +361,27 @@ class SuperMarioBrosEnv(NESEnv):
             return -25
 
         return 0
+    
+    @property
+    def _flag_reward(self):
+        """Return the reward earned by reaching a flag."""
+        if self._flag_get:
+            return 1000
 
+        return 0
     # MARK: nes-py API calls
 
     def _will_reset(self):
         """Handle and RAM hacking before a reset occurs."""
         self._time_last = 0
         self._x_position_last = 0
+        self._x_position_best = 0
 
     def _did_reset(self):
         """Handle any RAM hacking after a reset occurs."""
         self._time_last = self._time
         self._x_position_last = self._x_position
+        self._x_position_best = self._x_position
 
     def _did_step(self, terminated, truncated):
         """
@@ -398,8 +411,9 @@ class SuperMarioBrosEnv(NESEnv):
 
     def _get_reward(self):
         """Return the reward after a step occurs."""
-        return self._x_reward + self._time_penalty + self._death_penalty
-
+        #return self._x_reward + self._time_penalty + self._death_penalty
+        return self._x_reward + self._flag_reward
+    
     def _get_terminated(self):
         """Return True if the episode is over, False otherwise."""
         if self.is_single_stage_env:
