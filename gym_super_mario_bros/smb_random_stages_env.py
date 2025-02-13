@@ -48,6 +48,9 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             self.envs.append([])
             # iterate over the stages in the world, i.e., {1, ..., 4}
             for stage in range(1, 5):
+                if f"{world}-{stage}" not in stages:
+                    self.envs[-1].append(None)
+                    continue
                 # create the target as a tuple of the world and stage
                 target = (world, stage)
                 # create the environment with the given ROM mode
