@@ -31,7 +31,7 @@ class SuperMarioBrosEnv(NESEnv):
     # the legal range of rewards for each step
     # reward_range = (-15, 15)
 
-    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None, render_mode=None, **kwargs):
+    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None, render_mode=None, reward_scoring=False, **kwargs):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -47,6 +47,7 @@ class SuperMarioBrosEnv(NESEnv):
             None
 
         """
+        self._print_debug = kwargs.pop("print_debug", False)
         # decode the ROM path based on mode and lost levels flag
         rom = rom_path(lost_levels, rom_mode)
         # add render_mode to kwargs if specified
@@ -57,6 +58,7 @@ class SuperMarioBrosEnv(NESEnv):
         # set the target world, stage, and area variables
         target = decode_target(target, lost_levels)
         self._target_world, self._target_stage, self._target_area = target
+        self._reward_scoring = reward_scoring
         # setup a variable to keep track of the last frames time
         self._time_last = 0
         # setup a variable to keep track of the last frames x position
@@ -342,6 +344,16 @@ class SuperMarioBrosEnv(NESEnv):
         return _reward
 
     @property
+    def _score_reward(self):
+        if not self._reward_scoring:
+            return 0
+        _reward = self._score - self._prev_score
+        self._prev_score = self._score
+        if self._print_debug and _reward > 0:
+            print(f"score{_reward=}")
+        return _reward
+
+    @property
     def _time_penalty(self):
         """Return the reward for the in-game clock ticking."""
         _reward = self._time - self._time_last
@@ -382,6 +394,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._time_last = self._time
         self._x_position_last = self._x_position
         self._x_position_best = self._x_position
+        self._prev_score = self._score
 
     def _did_step(self, terminated, truncated):
         """
@@ -412,7 +425,8 @@ class SuperMarioBrosEnv(NESEnv):
     def _get_reward(self):
         """Return the reward after a step occurs."""
         #return self._x_reward + self._time_penalty + self._death_penalty
-        return self._x_reward + self._flag_reward
+        _reward = self._x_reward + self._flag_reward + self._score_reward
+        return _reward
     
     def _get_terminated(self):
         """Return True if the episode is over, False otherwise."""

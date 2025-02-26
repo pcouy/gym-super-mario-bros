@@ -22,7 +22,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
     # action space is a bitmap of button press values for the 8 NES buttons
     action_space = SuperMarioBrosEnv.action_space
 
-    def __init__(self, rom_mode='vanilla', stages=None, render_mode=None):
+    def __init__(self, rom_mode='vanilla', stages=None, render_mode=None, **kwargs):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -54,7 +54,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
                 # create the target as a tuple of the world and stage
                 target = (world, stage)
                 # create the environment with the given ROM mode
-                env = SuperMarioBrosEnv(rom_mode=rom_mode, target=target, render_mode=render_mode)
+                env = SuperMarioBrosEnv(rom_mode=rom_mode, target=target, render_mode=render_mode, **kwargs)
                 # add the environment to the stage list for this world
                 self.envs[-1].append(env)
         # create a placeholder for the current environment
@@ -151,7 +151,8 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             # iterate over each stage
             for stage in stage_lists:
                 # close the environment
-                stage.close()
+                if stage is not None:
+                    stage.close()
         # close the environment permanently
         self.env = None
         # if there is an image viewer open, delete it
