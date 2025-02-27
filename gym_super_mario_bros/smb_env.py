@@ -24,6 +24,7 @@ _ENEMY_TYPE_ADDRESSES = [0x0016, 0x0017, 0x0018, 0x0019, 0x001A]
 # Flagpole = 0x31
 _STAGE_OVER_ENEMIES = np.array([0x2D, 0x31])
 
+_LOG_BASE = np.log(5)
 
 class SuperMarioBrosEnv(NESEnv):
     """An environment for playing Super Mario Bros with OpenAI Gym."""
@@ -332,6 +333,8 @@ class SuperMarioBrosEnv(NESEnv):
     def _x_reward(self):
         """Return the reward based on left right movement between steps."""
         _reward = max(0, self._x_position - self._x_position_best)
+        if self._print_debug and _reward > 0:
+            print(f"x{_reward=}")
         self._x_position_last = self._x_position
         self._x_position_best = max(self._x_position_best, self._x_position)
         #print(f"position: {self._x_position}, best: {self._x_position_best}, reward: {_reward}")
@@ -347,7 +350,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _score_reward(self):
         if not self._reward_scoring:
             return 0
-        _reward = self._score - self._prev_score
+        _reward = np.log(1 + self._score - self._prev_score)/_LOG_BASE
         self._prev_score = self._score
         if self._print_debug and _reward > 0:
             print(f"score{_reward=}")
@@ -378,7 +381,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _flag_reward(self):
         """Return the reward earned by reaching a flag."""
         if self._flag_get:
-            return 1000
+            return 20
 
         return 0
     # MARK: nes-py API calls
@@ -426,6 +429,8 @@ class SuperMarioBrosEnv(NESEnv):
         """Return the reward after a step occurs."""
         #return self._x_reward + self._time_penalty + self._death_penalty
         _reward = self._x_reward + self._flag_reward + self._score_reward
+        if self._print_debug and _reward > 0:
+            print(f"total step{_reward=}")
         return _reward
     
     def _get_terminated(self):
