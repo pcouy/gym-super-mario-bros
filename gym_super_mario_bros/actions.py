@@ -22,6 +22,19 @@ SIMPLE_MOVEMENT = [
     ['left'],
 ]
 
+BASIC_MOVEMENT = [
+    ['NOOP'],
+    ['right'],
+    ['right', 'A'],
+    ['right', 'B'],
+    ['right', 'A', 'B'],
+    ['A'],
+    ['left'],
+    ['left', 'A'],
+    ['left', 'B'],
+    ['left', 'A', 'B'],
+]
+
 
 # actions for more complex movement
 COMPLEX_MOVEMENT = [
