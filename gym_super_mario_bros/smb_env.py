@@ -25,8 +25,6 @@ _ENEMY_TYPE_ADDRESSES = [0x0016, 0x0017, 0x0018, 0x0019, 0x001A]
 # Flagpole = 0x31
 _STAGE_OVER_ENEMIES = np.array([0x2D, 0x31])
 
-_LOG_BASE = np.log(5)
-
 
 class SuperMarioBrosEnv(NESEnv):
     """An environment for playing Super Mario Bros with OpenAI Gym."""
@@ -41,6 +39,8 @@ class SuperMarioBrosEnv(NESEnv):
         target=None,
         render_mode=None,
         reward_scoring=False,
+        score_log_base=5,
+        score_scale=1,
         death_penalty=False,
         death_penalty_scale=25,
         **kwargs,
@@ -72,6 +72,8 @@ class SuperMarioBrosEnv(NESEnv):
         target = decode_target(target, lost_levels)
         self._target_world, self._target_stage, self._target_area = target
         self._reward_scoring = reward_scoring
+        self._score_log_base = score_log_base
+        self._score_scale = score_scale
         self._enable_death_penalty = death_penalty
         self._death_penalty_scale = death_penalty_scale
         # setup a variable to keep track of the last frames time
@@ -364,7 +366,14 @@ class SuperMarioBrosEnv(NESEnv):
     def _score_reward(self):
         if not self._reward_scoring:
             return 0
-        _reward = np.log(1 + self._score - self._prev_score) / _LOG_BASE
+        if self._score_log_base >= 1:
+            _reward = (
+                self._score_scale
+                * np.log(1 + self._score - self._prev_score)
+                / self._score_log_base
+            )
+        else:
+            _reward = self._score_scale * (self._score - self._prev_score)
         self._prev_score = self._score
         if self._print_debug and _reward > 0:
             print(f"score{_reward=}")
