@@ -406,7 +406,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _flag_reward(self):
         """Return the reward earned by reaching a flag."""
         if self._flag_get:
-            return 20
+            return 500
 
         return 0
 
