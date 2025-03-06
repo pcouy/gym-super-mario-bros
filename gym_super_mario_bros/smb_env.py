@@ -26,13 +26,23 @@ _STAGE_OVER_ENEMIES = np.array([0x2D, 0x31])
 
 _LOG_BASE = np.log(5)
 
+
 class SuperMarioBrosEnv(NESEnv):
     """An environment for playing Super Mario Bros with OpenAI Gym."""
 
     # the legal range of rewards for each step
     # reward_range = (-15, 15)
 
-    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None, render_mode=None, reward_scoring=False, **kwargs):
+    def __init__(
+        self,
+        rom_mode="vanilla",
+        lost_levels=False,
+        target=None,
+        render_mode=None,
+        reward_scoring=False,
+        death_penalty=False,
+        **kwargs,
+    ):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -60,6 +70,7 @@ class SuperMarioBrosEnv(NESEnv):
         target = decode_target(target, lost_levels)
         self._target_world, self._target_stage, self._target_area = target
         self._reward_scoring = reward_scoring
+        self._enable_death_penalty = death_penalty
         # setup a variable to keep track of the last frames time
         self._time_last = 0
         # setup a variable to keep track of the last frames x position
@@ -372,6 +383,8 @@ class SuperMarioBrosEnv(NESEnv):
     @property
     def _death_penalty(self):
         """Return the reward earned by dying."""
+        if not self._enable_death_penalty:
+            return 0
         if self._is_dying or self._is_dead:
             return -25
 
@@ -427,12 +440,17 @@ class SuperMarioBrosEnv(NESEnv):
 
     def _get_reward(self):
         """Return the reward after a step occurs."""
-        #return self._x_reward + self._time_penalty + self._death_penalty
-        _reward = self._x_reward + self._flag_reward + self._score_reward
+        # return self._x_reward + self._time_penalty + self._death_penalty
+        _reward = (
+            self._x_reward
+            + self._flag_reward
+            + self._score_reward
+            + self._death_penalty
+        )
         if self._print_debug and _reward > 0:
             print(f"total step{_reward=}")
         return _reward
-    
+
     def _get_terminated(self):
         """Return True if the episode is over, False otherwise."""
         if self.is_single_stage_env:
