@@ -41,6 +41,7 @@ class SuperMarioBrosEnv(NESEnv):
         reward_scoring=False,
         score_log_base=5,
         score_scale=1,
+        global_score_log=False,
         death_penalty=False,
         death_penalty_scale=25,
         **kwargs,
@@ -74,6 +75,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._reward_scoring = reward_scoring
         self._score_log_base = score_log_base
         self._score_scale = score_scale
+        self._global_score_log = global_score_log
         self._enable_death_penalty = death_penalty
         self._death_penalty_scale = death_penalty_scale
         # setup a variable to keep track of the last frames time
@@ -367,11 +369,18 @@ class SuperMarioBrosEnv(NESEnv):
         if not self._reward_scoring:
             return 0
         if self._score_log_base >= 1:
-            _reward = (
-                self._score_scale
-                * np.log(1 + self._score - self._prev_score)
-                / self._score_log_base
-            )
+            if self._global_score_log:
+                _reward = (
+                    self._score_scale
+                    * (np.log(1 + self._score) - np.log(1 + self._prev_score))
+                    / self._score_log_base
+                )
+            else:
+                _reward = (
+                    self._score_scale
+                    * np.log(1 + self._score - self._prev_score)
+                    / self._score_log_base
+                )
         else:
             _reward = self._score_scale * (self._score - self._prev_score)
         self._prev_score = self._score
