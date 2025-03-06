@@ -1,4 +1,5 @@
 """An OpenAI Gym environment for Super Mario Bros. and Lost Levels."""
+
 from collections import defaultdict
 from nes_py import NESEnv
 import numpy as np
@@ -7,7 +8,7 @@ from ._roms import rom_path
 
 
 # create a dictionary mapping value of status register to string names
-_STATUS_MAP = defaultdict(lambda: 'fireball', {0:'small', 1: 'tall'})
+_STATUS_MAP = defaultdict(lambda: "fireball", {0: "small", 1: "tall"})
 
 
 # a set of state values indicating that Mario is "busy"
@@ -63,7 +64,7 @@ class SuperMarioBrosEnv(NESEnv):
         rom = rom_path(lost_levels, rom_mode)
         # add render_mode to kwargs if specified
         if render_mode is not None:
-            kwargs['render_mode'] = render_mode
+            kwargs["render_mode"] = render_mode
         # initialize the super object with the ROM path
         super(SuperMarioBrosEnv, self).__init__(rom, **kwargs)
         # set the target world, stage, and area variables
@@ -109,22 +110,22 @@ class SuperMarioBrosEnv(NESEnv):
             the integer value of this 10's place representation
 
         """
-        return int(''.join(map(str, self.ram[address:address + length])))
+        return int("".join(map(str, self.ram[address : address + length])))
 
     @property
     def _level(self):
         """Return the level of the game."""
-        return self.ram[0x075f] * 4 + self.ram[0x075c]
+        return self.ram[0x075F] * 4 + self.ram[0x075C]
 
     @property
     def _world(self):
         """Return the current world (1 to 8)."""
-        return self.ram[0x075f] + 1
+        return self.ram[0x075F] + 1
 
     @property
     def _stage(self):
         """Return the current stage (1 to 4)."""
-        return self.ram[0x075c] + 1
+        return self.ram[0x075C] + 1
 
     @property
     def _area(self):
@@ -135,30 +136,30 @@ class SuperMarioBrosEnv(NESEnv):
     def _score(self):
         """Return the current player score (0 to 999990)."""
         # score is represented as a figure with 6 10's places
-        return self._read_mem_range(0x07de, 6)
+        return self._read_mem_range(0x07DE, 6)
 
     @property
     def _time(self):
         """Return the time left (0 to 999)."""
         # time is represented as a figure with 3 10's places
-        return self._read_mem_range(0x07f8, 3)
+        return self._read_mem_range(0x07F8, 3)
 
     @property
     def _coins(self):
         """Return the number of coins collected (0 to 99)."""
         # coins are represented as a figure with 2 10's places
-        return self._read_mem_range(0x07ed, 2)
+        return self._read_mem_range(0x07ED, 2)
 
     @property
     def _life(self):
         """Return the number of remaining lives."""
-        return self.ram[0x075a]
+        return self.ram[0x075A]
 
     @property
     def _x_position(self):
         """Return the current horizontal position."""
         # add the current page 0x6d to the current x
-        return self.ram[0x6d].astype(int) * 0x100 + self.ram[0x86]
+        return self.ram[0x6D].astype(int) * 0x100 + self.ram[0x86]
 
     @property
     def _left_x_position(self):
@@ -166,12 +167,12 @@ class SuperMarioBrosEnv(NESEnv):
         # TODO: resolve RuntimeWarning: overflow encountered in ubyte_scalars
         # subtract the left x position 0x071c from the current x 0x86
         # return (self.ram[0x86] - self.ram[0x071c]) % 256
-        return np.uint8(int(self.ram[0x86]) - int(self.ram[0x071c])) % 256
+        return np.uint8(int(self.ram[0x86]) - int(self.ram[0x071C])) % 256
 
     @property
     def _y_pixel(self):
         """Return the current vertical position."""
-        return self.ram[0x03b8]
+        return self.ram[0x03B8]
 
     @property
     def _y_viewport(self):
@@ -185,7 +186,7 @@ class SuperMarioBrosEnv(NESEnv):
             up to 5 indicates falling into a hole
 
         """
-        return self.ram[0x00b5]
+        return self.ram[0x00B5]
 
     @property
     def _y_position(self):
@@ -222,12 +223,12 @@ class SuperMarioBrosEnv(NESEnv):
             0x0C : Palette cycling, can't move
 
         """
-        return self.ram[0x000e]
+        return self.ram[0x000E]
 
     @property
     def _is_dying(self):
         """Return True if Mario is in dying animation, False otherwise."""
-        return self._player_state == 0x0b or self._y_viewport > 1
+        return self._player_state == 0x0B or self._y_viewport > 1
 
     @property
     def _is_dead(self):
@@ -239,7 +240,7 @@ class SuperMarioBrosEnv(NESEnv):
         """Return True if the game has ended, False otherwise."""
         # the life counter will get set to 255 (0xff) when there are no lives
         # left. It goes 2, 1, 0 for the 3 lives of the game
-        return self._life == 0xff
+        return self._life == 0xFF
 
     @property
     def _is_busy(self):
@@ -278,8 +279,8 @@ class SuperMarioBrosEnv(NESEnv):
 
     def _write_stage(self):
         """Write the stage data to RAM to overwrite loading the next stage."""
-        self.ram[0x075f] = self._target_world - 1
-        self.ram[0x075c] = self._target_stage - 1
+        self.ram[0x075F] = self._target_world - 1
+        self.ram[0x075C] = self._target_stage - 1
         self.ram[0x0760] = self._target_area - 1
 
     def _runout_prelevel_timer(self):
@@ -334,7 +335,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _kill_mario(self):
         """Skip a death animation by forcing Mario to death."""
         # force Mario's state to dead
-        self.ram[0x000e] = 0x06
+        self.ram[0x000E] = 0x06
         # step forward one frame
         self._frame_advance(0)
 
@@ -348,7 +349,7 @@ class SuperMarioBrosEnv(NESEnv):
             print(f"x{_reward=}")
         self._x_position_last = self._x_position
         self._x_position_best = max(self._x_position_best, self._x_position)
-        #print(f"position: {self._x_position}, best: {self._x_position_best}, reward: {_reward}")
+        # print(f"position: {self._x_position}, best: {self._x_position_best}, reward: {_reward}")
         # TODO: check whether this is still necessary
         # resolve an issue where after death the x position resets. The x delta
         # is typically has at most magnitude of 3, 5 is a safe bound
@@ -361,7 +362,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _score_reward(self):
         if not self._reward_scoring:
             return 0
-        _reward = np.log(1 + self._score - self._prev_score)/_LOG_BASE
+        _reward = np.log(1 + self._score - self._prev_score) / _LOG_BASE
         self._prev_score = self._score
         if self._print_debug and _reward > 0:
             print(f"score{_reward=}")
@@ -389,7 +390,7 @@ class SuperMarioBrosEnv(NESEnv):
             return -25
 
         return 0
-    
+
     @property
     def _flag_reward(self):
         """Return the reward earned by reaching a flag."""
@@ -397,6 +398,7 @@ class SuperMarioBrosEnv(NESEnv):
             return 20
 
         return 0
+
     # MARK: nes-py API calls
 
     def _will_reset(self):

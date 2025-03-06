@@ -1,4 +1,5 @@
 """Methods for ROM file management."""
+
 from .decode_target import decode_target
 from .rom_path import rom_path
 

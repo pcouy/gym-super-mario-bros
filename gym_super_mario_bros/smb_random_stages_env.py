@@ -1,4 +1,5 @@
 """An OpenAI Gym Super Mario Bros. environment that randomly selects levels."""
+
 import gymnasium as gym
 import numpy as np
 from .smb_env import SuperMarioBrosEnv
@@ -10,7 +11,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
     # relevant meta-data about the environment
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "render_fps": SuperMarioBrosEnv.metadata.get("render_fps", 60)
+        "render_fps": SuperMarioBrosEnv.metadata.get("render_fps", 60),
     }
 
     # the legal range of rewards for each step
@@ -22,7 +23,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
     # action space is a bitmap of button press values for the 8 NES buttons
     action_space = SuperMarioBrosEnv.action_space
 
-    def __init__(self, rom_mode='vanilla', stages=None, render_mode=None, **kwargs):
+    def __init__(self, rom_mode="vanilla", stages=None, render_mode=None, **kwargs):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -37,7 +38,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         """
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-        
+
         # create a dedicated random number generator for the environment
         self.np_random = np.random.RandomState()
         # setup the environments
@@ -54,7 +55,9 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
                 # create the target as a tuple of the world and stage
                 target = (world, stage)
                 # create the environment with the given ROM mode
-                env = SuperMarioBrosEnv(rom_mode=rom_mode, target=target, render_mode=render_mode, **kwargs)
+                env = SuperMarioBrosEnv(
+                    rom_mode=rom_mode, target=target, render_mode=render_mode, **kwargs
+                )
                 # add the environment to the stage list for this world
                 self.envs[-1].append(env)
         # create a placeholder for the current environment
@@ -108,12 +111,12 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         self.seed(seed)
         # Get the collection of stages to sample from
         stages = self.stages
-        if options is not None and 'stages' in options:
-            stages = options['stages']
+        if options is not None and "stages" in options:
+            stages = options["stages"]
         # Select a random level
         if stages is not None and len(stages) > 0:
             level = self.np_random.choice(stages)
-            world, stage = level.split('-')
+            world, stage = level.split("-")
             world = int(world) - 1
             stage = int(stage) - 1
         else:
@@ -145,7 +148,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         """Close the environment."""
         # make sure the environment hasn't already been closed
         if self.env is None:
-            raise ValueError('env has already been closed.')
+            raise ValueError("env has already been closed.")
         # iterate over each list of stages
         for stage_lists in self.envs:
             # iterate over each stage
