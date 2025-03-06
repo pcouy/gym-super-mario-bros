@@ -42,6 +42,7 @@ class SuperMarioBrosEnv(NESEnv):
         render_mode=None,
         reward_scoring=False,
         death_penalty=False,
+        death_penalty_scale=25,
         **kwargs,
     ):
         """
@@ -72,6 +73,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._target_world, self._target_stage, self._target_area = target
         self._reward_scoring = reward_scoring
         self._enable_death_penalty = death_penalty
+        self._death_penalty_scale = death_penalty_scale
         # setup a variable to keep track of the last frames time
         self._time_last = 0
         # setup a variable to keep track of the last frames x position
@@ -387,7 +389,7 @@ class SuperMarioBrosEnv(NESEnv):
         if not self._enable_death_penalty:
             return 0
         if self._is_dying or self._is_dead:
-            return -25
+            return -self._death_penalty_scale
 
         return 0
 
