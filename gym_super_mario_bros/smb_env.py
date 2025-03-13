@@ -43,6 +43,7 @@ class SuperMarioBrosEnv(NESEnv):
         score_scale=1,
         death_penalty=False,
         death_penalty_scale=25,
+        flag_reward=50,
         **kwargs,
     ):
         """
@@ -76,6 +77,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._score_scale = score_scale
         self._enable_death_penalty = death_penalty
         self._death_penalty_scale = death_penalty_scale
+        self._flag_reward_value = flag_reward
         # setup a variable to keep track of the last frames time
         self._time_last = 0
         # setup a variable to keep track of the last frames x position
@@ -406,7 +408,7 @@ class SuperMarioBrosEnv(NESEnv):
     def _flag_reward(self):
         """Return the reward earned by reaching a flag."""
         if self._flag_get:
-            return 500
+            return self._flag_reward_value
 
         return 0
 
