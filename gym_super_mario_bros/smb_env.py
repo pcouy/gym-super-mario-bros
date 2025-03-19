@@ -44,6 +44,7 @@ class SuperMarioBrosEnv(NESEnv):
         death_penalty=False,
         death_penalty_scale=25,
         flag_reward=50,
+        scale_by_position=0,
         **kwargs,
     ):
         """
@@ -83,6 +84,7 @@ class SuperMarioBrosEnv(NESEnv):
         # setup a variable to keep track of the last frames x position
         self._x_position_last = 0
         self._x_position_best = 0
+        self._scale_by_position = scale_by_position
         # reset the emulator
         self.reset()
         # skip the start screen
@@ -362,7 +364,7 @@ class SuperMarioBrosEnv(NESEnv):
         if _reward < -5 or _reward > 5:
             return 0
 
-        return _reward
+        return _reward * (1 + self._scale_by_position * self._x_position_best)
 
     @property
     def _score_reward(self):
