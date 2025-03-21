@@ -23,7 +23,14 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
     # action space is a bitmap of button press values for the 8 NES buttons
     action_space = SuperMarioBrosEnv.action_space
 
-    def __init__(self, rom_mode="vanilla", stages=None, render_mode=None, **kwargs):
+    def __init__(
+        self,
+        rom_mode="vanilla",
+        stages=None,
+        render_mode=None,
+        unlock_stages=False,
+        **kwargs,
+    ):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -66,6 +73,12 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         self.viewer = None
         # create a placeholder for the subset of stages to choose
         self.stages = stages
+
+        self.unlock_stages = unlock_stages
+        if self.unlock_stages:
+            self.max_unlocked = 1
+        else:
+            self.max_unlocked = len(stages)
 
     @property
     def screen(self):
@@ -115,7 +128,8 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             stages = options["stages"]
         # Select a random level
         if stages is not None and len(stages) > 0:
-            level = self.np_random.choice(stages)
+            level = self.np_random.choice(stages[: self.max_unlocked])
+            self.level = level
             world, stage = level.split("-")
             world = int(world) - 1
             stage = int(stage) - 1
@@ -142,7 +156,13 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             - info (dict): contains auxiliary diagnostic information
 
         """
-        return self.env.step(action)
+        res = self.env.step(action)
+        if self.unlock_stages and self.env._flag_get:
+            self.max_unlocked = max(
+                self.max_unlocked,
+                self.stages.index(self.level) + 2,
+            )
+        return res
 
     def close(self):
         """Close the environment."""
