@@ -79,6 +79,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             self.max_unlocked = 1
         else:
             self.max_unlocked = len(stages)
+        self.stages_weights = np.ones((self.max_unlocked,))
 
     @property
     def screen(self):
@@ -128,7 +129,10 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             stages = options["stages"]
         # Select a random level
         if stages is not None and len(stages) > 0:
-            level = self.np_random.choice(stages[: self.max_unlocked])
+            level = self.np_random.choice(
+                stages[: self.max_unlocked],
+                p=self.stages_weights / self.stages_weights.sum(),
+            )
             self.level = level
             world, stage = level.split("-")
             world = int(world) - 1
@@ -162,6 +166,8 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
                 self.max_unlocked,
                 self.stages.index(self.level) + 2,
             )
+            self.stages_weights = np.ones((self.max_unlocked,))
+            self.stages_weights[-1] = self.max_unlocked
         return res
 
     def close(self):
