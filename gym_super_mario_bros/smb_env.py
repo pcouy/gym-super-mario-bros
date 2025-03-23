@@ -45,6 +45,7 @@ class SuperMarioBrosEnv(NESEnv):
         death_penalty_scale=25,
         flag_reward=50,
         scale_by_position=0,
+        max_time=250,
         **kwargs,
     ):
         """
@@ -85,6 +86,8 @@ class SuperMarioBrosEnv(NESEnv):
         self._x_position_last = 0
         self._x_position_best = 0
         self._scale_by_position = scale_by_position
+
+        self._max_time = max_time
         # reset the emulator
         self.reset()
         # skip the start screen
@@ -120,6 +123,16 @@ class SuperMarioBrosEnv(NESEnv):
         """
         return int("".join(map(str, self.ram[address : address + length])))
 
+    def _write_mem_range(self, address, value):
+        digits = []
+        while value > 0:
+            digits.insert(0, value % 10)
+            value = value // 10
+        i = 0
+        for digit in digits:
+            self.ram[address + i] = digit
+            i += 1
+
     @property
     def _level(self):
         """Return the level of the game."""
@@ -151,6 +164,10 @@ class SuperMarioBrosEnv(NESEnv):
         """Return the time left (0 to 999)."""
         # time is represented as a figure with 3 10's places
         return self._read_mem_range(0x07F8, 3)
+
+    @_time.setter
+    def _time(self, value):
+        self._write_mem_range(0x07F8, value)
 
     @property
     def _coins(self):
@@ -424,6 +441,7 @@ class SuperMarioBrosEnv(NESEnv):
 
     def _did_reset(self):
         """Handle any RAM hacking after a reset occurs."""
+        self._time = self._max_time
         self._time_last = self._time
         self._x_position_last = self._x_position
         self._x_position_best = self._x_position
