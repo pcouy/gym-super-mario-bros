@@ -41,8 +41,7 @@ class SuperMarioBrosEnv(NESEnv):
         reward_scoring=False,
         score_log_base=5,
         score_scale=1,
-        death_penalty=False,
-        death_penalty_scale=25,
+        death_penalty_scale=0,
         flag_reward=50,
         scale_by_position=0,
         max_time=250,
@@ -77,7 +76,6 @@ class SuperMarioBrosEnv(NESEnv):
         self._reward_scoring = reward_scoring
         self._score_log_base = score_log_base
         self._score_scale = score_scale
-        self._enable_death_penalty = death_penalty
         self._death_penalty_scale = death_penalty_scale
         self._flag_reward_value = flag_reward
         # setup a variable to keep track of the last frames time
@@ -416,8 +414,6 @@ class SuperMarioBrosEnv(NESEnv):
     @property
     def _death_penalty(self):
         """Return the reward earned by dying."""
-        if not self._enable_death_penalty:
-            return 0
         if self._is_dying or self._is_dead:
             return -self._death_penalty_scale
 
