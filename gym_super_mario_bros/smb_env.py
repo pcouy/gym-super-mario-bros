@@ -43,6 +43,7 @@ class SuperMarioBrosEnv(NESEnv):
         score_scale=1,
         death_penalty_scale=0,
         flag_reward=50,
+        time_penalty_scale=0,
         scale_by_position=0,
         max_time=250,
         **kwargs,
@@ -85,6 +86,7 @@ class SuperMarioBrosEnv(NESEnv):
         self._x_position_best = 0
         self._scale_by_position = scale_by_position
 
+        self._time_penalty_scale = time_penalty_scale
         self._max_time = max_time
         # reset the emulator
         self.reset()
@@ -407,9 +409,8 @@ class SuperMarioBrosEnv(NESEnv):
         # should default to 0 reward
         if _reward > 0:
             return 0
-        print(f"time: {self._time}, last: {self._time_last}, reward: {_reward}")
 
-        return _reward
+        return _reward * self._time_penalty_scale
 
     @property
     def _death_penalty(self):
@@ -477,6 +478,7 @@ class SuperMarioBrosEnv(NESEnv):
             + self._flag_reward
             + self._score_reward
             + self._death_penalty
+            + self._time_penalty
         )
         if self._print_debug and _reward > 0:
             print(f"total step{_reward=}")
