@@ -74,12 +74,13 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         # create a placeholder for the subset of stages to choose
         self.stages = stages
 
-        self.unlock_stages = unlock_stages
+        self.unlock_stages = int(unlock_stages)
         if self.unlock_stages:
             self.max_unlocked = 1
         else:
             self.max_unlocked = len(stages)
         self.stages_weights = np.ones((self.max_unlocked,))
+        self.count_finished = np.zeros((len(stages),))
 
     @property
     def screen(self):
@@ -161,13 +162,16 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
 
         """
         res = self.env.step(action)
+        stage_index = self.stages.index(self.level)
         if self.unlock_stages and self.env._flag_get:
-            self.max_unlocked = max(
-                self.max_unlocked,
-                self.stages.index(self.level) + 2,
-            )
-            self.stages_weights = np.ones((self.max_unlocked,))
-            self.stages_weights[-1] = self.max_unlocked
+            self.count_finished[stage_index] += 1
+            if self.count_finished[stage_index] > self.unlock_stages:
+                self.max_unlocked = max(
+                    self.max_unlocked,
+                    self.stages.index(self.level) + 2,
+                )
+                self.stages_weights = np.ones((self.max_unlocked,))
+                self.stages_weights[-1] = self.max_unlocked
         return res
 
     def close(self):
