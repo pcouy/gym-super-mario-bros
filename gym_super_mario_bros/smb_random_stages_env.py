@@ -29,6 +29,7 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
         stages=None,
         render_mode=None,
         unlock_stages=False,
+        balance_steps_per_stage=False,
         **kwargs,
     ):
         """
@@ -81,6 +82,10 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             self.max_unlocked = len(stages)
         self.stages_weights = np.ones((self.max_unlocked,))
         self.count_finished = np.zeros((len(stages),))
+        self.steps_per_stage = np.zeros((len(stages),))
+
+        self.balance_steps_per_stage = balance_steps_per_stage
+        self.stage_index = None
 
     @property
     def screen(self):
@@ -130,11 +135,16 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
             stages = options["stages"]
         # Select a random level
         if stages is not None and len(stages) > 0:
+            if self.balance_steps_per_stage:
+                self.stages_weights = 1e6 / (1 + np.log(self.steps_per_stage + 1))
+                self.stages_weights = self.stages_weights[: self.max_unlocked]
+                self.stages_weights[-1] *= self.max_unlocked
             level = self.np_random.choice(
                 stages[: self.max_unlocked],
                 p=self.stages_weights / self.stages_weights.sum(),
             )
             self.level = level
+            self.stage_index = self.stages.index(self.level)
             world, stage = level.split("-")
             world = int(world) - 1
             stage = int(stage) - 1
@@ -162,16 +172,17 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
 
         """
         res = self.env.step(action)
-        stage_index = self.stages.index(self.level)
+        self.steps_per_stage[self.stage_index] += 1
         if self.unlock_stages and self.env._flag_get:
-            self.count_finished[stage_index] += 1
-            if self.count_finished[stage_index] > self.unlock_stages:
+            self.count_finished[self.stage_index] += 1
+            if self.count_finished[self.stage_index] > self.unlock_stages:
                 self.max_unlocked = max(
                     self.max_unlocked,
                     self.stages.index(self.level) + 2,
                 )
-                self.stages_weights = np.ones((self.max_unlocked,))
-                self.stages_weights[-1] = self.max_unlocked
+                if not self.balance_steps_per_stage:
+                    self.stages_weights = np.ones((self.max_unlocked,))
+                    self.stages_weights[-1] = self.max_unlocked
         return res
 
     def close(self):
